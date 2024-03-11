@@ -1,3 +1,7 @@
+'''
+The purpose of this class is provide numerous static metric calculations
+'''
+
 import pandas as pd
 
 class Metrics:
@@ -40,6 +44,8 @@ class Metrics:
         calculated_df.set_index('datetime',inplace=True)
 
         # Filter for POI that are 2 Standard Deviations above average
-        filtered_calculated_df = calculated_df[calculated_df['range'] >= calculated_df['range'].mean() + 2*calculated_df['range'].std()]
+        filtered_calculated_df = calculated_df[calculated_df['range'] >= (calculated_df['range'].mean() + 4*calculated_df['range'].std())]
 
         return filtered_calculated_df
+    
+    # Mark points of signficiant cumulative direction volume changes

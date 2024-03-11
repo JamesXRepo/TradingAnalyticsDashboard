@@ -1,3 +1,7 @@
+'''
+The purpose of this class is to create the dashboard to display various metrics, graphs, and etc... using Plotly
+'''
+
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import datetime
@@ -204,7 +208,7 @@ def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, gr
     
     supportAndResistanceLine = Metrics.pivotPoints(stock_data)
     pivot_trace = go.Scatter(x=supportAndResistanceLine.index, y=supportAndResistanceLine['poi'],
-                            mode='markers', marker=dict(size=8),marker_color='blue',name='poi',showlegend=False,visible=False)
+                            mode='markers', marker=dict(size=8),marker_color='#4bebd3',name='poi',showlegend=False,visible=False)
     
     fig1.add_trace(pivot_trace,row=1,col=1)
     fig1.add_trace(go.Bar(x=stock_data.index,y=stock_data['cumulative_volume'], name = 'Cumlative Direction Volume',marker_color=bar_color, showlegend=False), row=2, col=1)

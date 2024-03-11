@@ -1,3 +1,7 @@
+'''
+The purpose of this class is to provide various way to load data to be processed and visualized
+'''
+
 import yfinance as yf
 
 class Load:
