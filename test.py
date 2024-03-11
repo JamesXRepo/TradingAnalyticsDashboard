@@ -16,7 +16,6 @@ text_color = "#f5f6fa"
 gridline_color = "#1b1f33"
 bar_color = "#0b5978"
 input_bg_color = "#24242e"
-hover_color = "#1a1929"
 
 current_ticker = 'AAPL'
 current_interval = '5m'
@@ -41,15 +40,13 @@ app.layout = dbc.Container ([
                       className='mt-1 input-group-sm', 
                       style={
                           'width': '100%',
+                          'margin-bottom': '10px',
                           'background-color': input_bg_color, 
                           'color': text_color,
                           'border': '2px solid #0d1116'
                           },
                       ),
-                      width=2,
-                      style= {
-                           'margin-top': '2px'
-                      }
+                      width=2
         ),
         dbc.Col(
             dcc.Dropdown(
@@ -63,19 +60,20 @@ app.layout = dbc.Container ([
                     {'label': '1d', 'value': '1d'},
                     # Add more options as needed
                 ],
-                value=current_interval, # Set default value,
+                value=current_interval, # Set default value
                 style={
-                    'background-color': hover_color,
+                    'margin-bottom': '10px',
+                    'width': '80%',  # Change width to 100% to fill the column
+                    'background-color': background_color,
                     'border-radius': '20px',  # Apply border-radius to give rounded corners
-                    'border': '2px solid #0d1116',
+                    'border': '2px solid #0d1116'
                 },
                 clearable=False
             ),
-            width=2,
-            style={
-                'width': '10%',  # Change width to 100% to fill the column
-                'background-color': background_color,
-            }
+            width=2
+        ),
+        dbc.Col(
+            html.Button('Pivot Points',id='pivot-point-val', n_clicks=0)
         )
     ],justify='start',
     style={'backgroundColor': background_color}),
@@ -86,10 +84,8 @@ app.layout = dbc.Container ([
                              'height': '90vh'
                              })
         ])
-    ],style={'backgroundColor': background_color,'border': '2px solid #0d1116'}) 
+    ],style={"height": "100vh",'backgroundColor': background_color,'border': '2px solid #0d1116'}) 
 ],fluid=True)
-
-poi_visible = False  # Initially, set POI visibility to False
 
 # Callback to update the graph based on input ticker and date range slider
 @app.callback(
@@ -97,12 +93,14 @@ poi_visible = False  # Initially, set POI visibility to False
     [Input('input-ticker', 'value'),
     Input('dropdown-menu','value'),
     Input('stock-graph','relayoutData'),
-    Input('input-ticker', 'n_submit')],
+    Input('input-ticker', 'n_submit'),
+    Input('pivot-point-val', 'n_clicks')],
     [State('input-ticker', 'id'),  # Add State to capture the ID of the triggering input
      State('dropdown-menu', 'id'),
-     State('stock-graph', 'id')] 
+     State('stock-graph', 'id'),
+     State('pivot-point-val','id')] 
 )
-def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, graph_id):
+def select_graph(ticker,interval,relayoutData,n_submit,n_clicks,input_id, dropdown_id, graph_id,button_id):
 
 
     # Check which input triggered the callback
@@ -124,7 +122,6 @@ def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, gr
         period = '5y'
 
     global event_count
-    global poi_visible
 
     if triggered_input == input_id and n_submit > event_count:
         # input-ticker triggered the callback
@@ -202,42 +199,27 @@ def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, gr
                     low=stock_data['Low'],
                     close=stock_data['Close'], showlegend=False), row=1, col=1)
     
-    supportAndResistanceLine = Metrics.pivotPoints(stock_data)
-    pivot_trace = go.Scatter(x=supportAndResistanceLine.index, y=supportAndResistanceLine['poi'],
-                            mode='markers', marker=dict(size=8),marker_color='blue',name='poi',showlegend=False,visible=False)
-    
-    fig1.add_trace(pivot_trace,row=1,col=1)
     fig1.add_trace(go.Bar(x=stock_data.index,y=stock_data['cumulative_volume'], name = 'Cumlative Direction Volume',marker_color=bar_color, showlegend=False), row=2, col=1)
 
-    # Define button for toggling visibility
-    pivot_button = dict(
-        label='Pivot Point',
-        method='update',
-        args=[{'visible': [True,True,True]}]
-    )
+    # Update x-axis for individual subplots
+    fig1.update_xaxes(type='category', showgrid=False,range=[x_low,x_upper],showticklabels=False, row=1, col=1)
+    fig1.update_xaxes(type='category', range=[x_low,x_upper],showticklabels=False, row=2, col=1)
 
-    none_button = dict(
-        label='None',
-        method='update',
-        args=[{'visible': [True,False,True]}]
-    )
+
+    upper_range_stock = stock_data.iloc[x_low:x_upper]['Open'].max() + 2
+    lower_range_stock = stock_data.iloc[x_low:x_upper]['Open'].min() - 2
+
+    upper_range_cuml_vol = stock_data.iloc[x_low:x_upper]['cumulative_volume'].max()
+    lower_range_cuml_vol = stock_data.iloc[x_low:x_upper]['cumulative_volume'].min()
+
+    supportAndResistanceLine = Metrics.pivotPoints(stock_data)
+    pivot_trace = go.Scatter(x=supportAndResistanceLine.index, y=supportAndResistanceLine['poi'],
+                            mode='markers', marker=dict(size=8),marker_color='blue',name='poi',showlegend=False,visible=True)
+    
+    fig1.add_trace(pivot_trace,row=1,col=1)
 
     # Set layout
     fig1.update_layout(
-            updatemenus=[
-            dict(
-                buttons=[none_button,pivot_button],
-                direction='right',
-                showactive=True,
-                x=0,
-                xanchor='left',
-                y=1.1,
-                yanchor='top',
-                bordercolor = gridline_color,
-                font=dict(color='white'),
-                bgcolor= hover_color,
-            )
-        ],
         yaxis_title='Price',
         xaxis_rangeslider_visible=False,
         hovermode='x',
@@ -253,19 +235,8 @@ def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, gr
             title='Cum. Direct. Vol.',  # Set y-axis label for row 2, col 1
             title_font=dict(color=text_color),  # Set y-axis label color for row 2, col 1
             tickfont=dict(color=text_color),  # Set y-axis tick labels color for row 2, col 1
-        )
     )
-
-    upper_range_stock = stock_data.iloc[x_low:x_upper]['Open'].max() + 2
-    lower_range_stock = stock_data.iloc[x_low:x_upper]['Open'].min() - 2
-
-    upper_range_cuml_vol = stock_data.iloc[x_low:x_upper]['cumulative_volume'].max()
-    lower_range_cuml_vol = stock_data.iloc[x_low:x_upper]['cumulative_volume'].min()
-
-
-    # Update x-axis for individual subplots
-    fig1.update_xaxes(type='category', showgrid=False,range=[x_low,x_upper],showticklabels=False, row=1, col=1)
-    fig1.update_xaxes(type='category', range=[x_low,x_upper],showticklabels=False, row=2, col=1)
+    )
 
     # Update y-axis layout for individual subplots to enable autorange
     fig1.update_yaxes(range=[lower_range_stock,upper_range_stock], gridwidth=1, gridcolor=gridline_color, row=1, col=1)
