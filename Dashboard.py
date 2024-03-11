@@ -8,22 +8,8 @@ import warnings
 warnings.simplefilter('ignore')
 import math
 
-# Function to fetch data and calculate points of interest
-def load_data(ticker,period_val,interval_val):
-    aapl = yf.Ticker(ticker)
-    stock_data = aapl.history(period=period_val, interval=interval_val)
-    stock_data['price_difference'] = stock_data['Close'] - stock_data['Open']
-    stock_data['direction_volume'] = stock_data.apply(lambda row: -row['Volume'] if row['price_difference'] < 0 else row['Volume'], axis=1)
-    stock_data['cumulative_volume'] = stock_data['direction_volume'].cumsum()
-
-    return stock_data
-
-def calc_metric(stock_data):
-    stock_data['price_difference'] = stock_data['Close'] - stock_data['Open']
-    stock_data['direction_volume'] = stock_data.apply(lambda row: -row['Volume'] if row['price_difference'] < 0 else row['Volume'], axis=1)
-    stock_data['cumulative_volume'] = stock_data['direction_volume'].cumsum()
-
-    return stock_data
+from Metrics import Metrics
+from Load import Load
 
 graph_background_color = "#0f1014"
 background_color = "#0d1116"
@@ -133,11 +119,10 @@ def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, gr
 
     if triggered_input == input_id and n_submit > event_count:
         # input-ticker triggered the callback
-        
         event_count += 1
 
         # Fetch stock data and calculate points of interest
-        temp_data = load_data(current_ticker,period,current_interval)
+        temp_data = Load.yf_LoadData(current_ticker,period,current_interval)
         temp_index = temp_data.copy()
         temp_index.index = temp_index.index.date
         num_days = temp_index.index.nunique()
@@ -148,14 +133,14 @@ def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, gr
         start_date = current_time - datetime.timedelta(days=num_days)
         end_date = current_time
 
-        stock_data = calc_metric(temp_data.loc[start_date:end_date])
+        stock_data = Metrics.cumulativeDirectionVolume(temp_data.loc[start_date:end_date])
         x_low = 0
         x_upper = len(stock_data)-1
     elif triggered_input == dropdown_id:
         # dropdown-menu triggered the callback
 
         # Fetch stock data and calculate points of interest
-        temp_data = load_data(current_ticker,period,current_interval)
+        temp_data = Load.yf_LoadData(current_ticker,period,current_interval)
         temp_index = temp_data.copy()
         temp_index.index = temp_index.index.date
         num_days = temp_index.index.nunique()
@@ -166,7 +151,7 @@ def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, gr
         start_date = current_time - datetime.timedelta(days=num_days)
         end_date = current_time
 
-        stock_data = calc_metric(temp_data.loc[start_date:end_date])
+        stock_data = Metrics.cumulativeDirectionVolume(temp_data.loc[start_date:end_date])
         x_low = 0
         x_upper = len(stock_data)-1
 
@@ -174,7 +159,7 @@ def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, gr
         # stock-graph triggered the callback
 
         # Fetch stock data and calculate points of interest
-        temp_data = load_data(current_ticker,period,current_interval)
+        temp_data = Load.yf_LoadData(current_ticker,period,current_interval)
         temp_index = temp_data.copy()
         temp_index.index = temp_index.index.date
         num_days = temp_index.index.nunique()
@@ -185,7 +170,7 @@ def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, gr
         start_date = current_time - datetime.timedelta(days=num_days)
         end_date = current_time
         
-        stock_data = calc_metric(temp_data.loc[start_date:end_date])
+        stock_data = Metrics.cumulativeDirectionVolume(temp_data.loc[start_date:end_date])
 
         if 'xaxis2.range[0]' in relayoutData:
             x_low = math.floor(relayoutData['xaxis2.range[0]'])
@@ -201,23 +186,23 @@ def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, gr
     fig1 = make_subplots(rows=2, cols=1, shared_xaxes=True,row_heights=[0.7, 0.3], vertical_spacing=0.05)
 
     # Plot candlestick chart
-    fig1.add_trace(go.Candlestick(x=temp_data.index,
-                    open=temp_data['Open'],
-                    high=temp_data['High'],
-                    low=temp_data['Low'],
-                    close=temp_data['Close'], showlegend=False), row=1, col=1)
+    fig1.add_trace(go.Candlestick(x=stock_data.index,
+                    open=stock_data['Open'],
+                    high=stock_data['High'],
+                    low=stock_data['Low'],
+                    close=stock_data['Close'], showlegend=False), row=1, col=1)
     
-    fig1.add_trace(go.Bar(x=temp_data.index,y=temp_data['cumulative_volume'], name = 'Cumlative Direction Volume',marker_color=bar_color, showlegend=False), row=2, col=1)
+    fig1.add_trace(go.Bar(x=stock_data.index,y=stock_data['cumulative_volume'], name = 'Cumlative Direction Volume',marker_color=bar_color, showlegend=False), row=2, col=1)
 
     # Update x-axis for individual subplots
     fig1.update_xaxes(type='category', showgrid=False,range=[x_low,x_upper],showticklabels=False, row=1, col=1)
     fig1.update_xaxes(type='category', range=[x_low,x_upper],showticklabels=False, row=2, col=1)
 
-    upper_range_stock = temp_data.iloc[x_low:x_upper]['Open'].max() + 2
-    lower_range_stock = temp_data.iloc[x_low:x_upper]['Open'].min() - 2
+    upper_range_stock = stock_data.iloc[x_low:x_upper]['Open'].max() + 2
+    lower_range_stock = stock_data.iloc[x_low:x_upper]['Open'].min() - 2
 
-    upper_range_cuml_vol = temp_data.iloc[x_low:x_upper]['cumulative_volume'].max()
-    lower_range_cuml_vol = temp_data.iloc[x_low:x_upper]['cumulative_volume'].min()
+    upper_range_cuml_vol = stock_data.iloc[x_low:x_upper]['cumulative_volume'].max()
+    lower_range_cuml_vol = stock_data.iloc[x_low:x_upper]['cumulative_volume'].min()
 
     # Set layout
     fig1.update_layout(
