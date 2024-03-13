@@ -10,16 +10,17 @@ import dash_bootstrap_components as dbc
 import warnings
 warnings.simplefilter('ignore')
 import math
+from flask import Flask
 
 from Metrics import Metrics
 from Load import Load
 
 class Dashboard:
 
-    def __init__(self):
-        self.plot()
+    def __init__(self) -> None:
+        self.create_dash_app()
 
-    def plot(self):
+    def create_dash_app(self):
         graph_background_color = "#0f1014"
         background_color = "#0d1116"
         text_color = "#f5f6fa"
@@ -36,8 +37,10 @@ class Dashboard:
 
         event_count = 0
 
+        server = Flask(__name__)
+
         # Initialize the app
-        app = Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
+        app = Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP], server=server)
 
         # App Layout
         app.layout = dbc.Container ([
@@ -169,8 +172,7 @@ class Dashboard:
             State('dropdown-menu', 'id'),
             State('stock-graph', 'id')] 
         )
-        def select_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, graph_id):
-
+        def update_graph(ticker,interval,relayoutData,n_submit,input_id, dropdown_id, graph_id):
 
             # Check which input triggered the callback
             triggered_input = callback_context.triggered[0]['prop_id'].split('.')[0]
@@ -213,6 +215,8 @@ class Dashboard:
                 stock_data = Metrics.cumulativeDirectionVolume(temp_data.loc[start_date:end_date])
                 x_low = 0
                 x_upper = len(stock_data)-1
+
+
             elif triggered_input == dropdown_id:
                 # dropdown-menu triggered the callback
 
@@ -258,6 +262,23 @@ class Dashboard:
                     x_upper = math.floor(relayoutData['xaxis2.range[1]'])
                 else:
                     x_upper = len(stock_data)-1
+            else:
+                # Fetch stock data and calculate points of interest
+                temp_data = Load.yf_LoadData(current_ticker,period,current_interval)
+                temp_index = temp_data.copy()
+                temp_index.index = temp_index.index.date
+                num_days = temp_index.index.nunique()
+                # Get current time in the "America/New_York" timezone
+                current_time = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-5)))  # Adjust UTC offset for "America/New_York"
+
+                # Filter stock data based on selected date range
+                start_date = current_time - datetime.timedelta(days=num_days)
+                end_date = current_time
+                
+                stock_data = Metrics.cumulativeDirectionVolume(temp_data.loc[start_date:end_date])
+
+                x_low = 0
+                x_upper = len(stock_data)-1
             
 
             # Create subplot
@@ -306,7 +327,7 @@ class Dashboard:
                         bgcolor= hover_color,
                     )
                 ],
-                yaxis_title='Price',
+                yaxis_title=' ce',
                 xaxis_rangeslider_visible=False,
                 hovermode='x',
                 paper_bgcolor=graph_background_color,
