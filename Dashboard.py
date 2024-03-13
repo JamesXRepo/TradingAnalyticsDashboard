@@ -21,6 +21,7 @@ gridline_color = "#1b1f33"
 bar_color = "#0b5978"
 input_bg_color = "#24242e"
 hover_color = "#1a1929"
+header_background_color = "#04080f"
 
 current_ticker = 'AAPL'
 current_interval = '5m'
@@ -33,68 +34,122 @@ app = Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
 # App Layout
 app.layout = dbc.Container ([
     dbc.Row([
+        dbc.Col([
+                dbc.Tabs(
+                    [
+                        dbc.Tab(label="Descriptive Analytics", tab_id="input-tab",active_label_style={"color": text_color,"backgroundColor":"#273052"},label_style={"color":'#3a4366','border': '2px solid #04080f'}),
+                        dbc.Tab(label="Modelling and Predictions", tab_id="modelling-tab",active_label_style={"color": text_color,"backgroundColor":"#273052"},label_style={"color":'#3a4366','border': '2px solid #04080f'}),
+                        dbc.Tab(label="Real-time Trades", tab_id="real-time-tab",active_label_style={"color": text_color,"backgroundColor":"#273052"},label_style={"color":'#3a4366','border': '2px solid #04080f'})
+                    ],
+                    id="tabs",
+                    active_tab="input-tab",
+                    style={'backgroundColor': header_background_color,'border': '2px solid #04080f'}
+                )],
+                style={'backgroundColor': header_background_color,'border': '2px solid #04080f'}
+        ),
         dbc.Col(
-            html.H1("Trading Analytics"),
-            width=12,
-            style={'backgroundColor': background_color ,'color' : text_color}
-            )
+        html.H1("| Trading Analytics  ",style={'backgroundColor': header_background_color}),
+        width=3,
+        style={'backgroundColor': header_background_color ,'color' : text_color,'textAlign': 'right'}
+        )
     ]),
     dbc.Row([
         dbc.Col(
-            dcc.Input(id='input-ticker', placeholder='Enter ticker symbol', type='text', value=current_ticker,
-                      className='mt-1 input-group-sm', 
-                      style={
-                          'width': '100%',
-                          'background-color': input_bg_color, 
-                          'color': text_color,
-                          'border': '2px solid #0d1116'
-                          },
-                      ),
-                      width=2,
-                      style= {
-                           'margin-top': '2px'
-                      }
-        ),
-        dbc.Col(
-            dcc.Dropdown(
-                className="dropdown-item-text",
-                id='dropdown-menu',
-                options=[
-                    {'label': '5min', 'value': '5m'},
-                    {'label': '15min', 'value': '15m'},
-                    {'label': '30min', 'value': '30m'},
-                    {'label': '1hr', 'value': '1h'},
-                    {'label': '1d', 'value': '1d'},
-                    # Add more options as needed
-                ],
-                value=current_interval, # Set default value,
-                style={
-                    'background-color': hover_color,
-                    'border-radius': '20px',  # Apply border-radius to give rounded corners
-                    'border': '2px solid #0d1116',
-                },
-                clearable=False
-            ),
-            width=2,
-            style={
-                'width': '10%',  # Change width to 100% to fill the column
-                'background-color': background_color,
-            }
+            html.Div(id="tab-content"),
+            width=12
         )
-    ],justify='start',
-    style={'backgroundColor': background_color}),
-    dbc.Row([
-        dbc.Col([
-            dcc.Graph(id='stock-graph',
-                      style={'width': '100%', 
-                             'height': '90vh'
-                             })
-        ])
     ],style={'backgroundColor': background_color,'border': '2px solid #0d1116'}) 
 ],fluid=True)
 
 poi_visible = False  # Initially, set POI visibility to False
 
+# Callback to render tab content
+@app.callback(
+    Output("tab-content", "children"),
+    [Input("tabs", "active_tab")]
+)
+def render_tab_content(active_tab):
+    if active_tab == "input-tab":
+        return dbc.Container([
+            dbc.Row([
+            dbc.Col(
+                dcc.Input(id='input-ticker', placeholder='Enter ticker symbol', type='text', value=current_ticker,
+                          className='mt-1 input-group-sm', 
+                          style={
+                              'width': '100%',
+                              'background-color': input_bg_color, 
+                              'color': text_color,
+                              'border': '2px solid #0d1116'
+                              },
+                          ),
+                          width=2,
+                          style= {
+                               'margin-top': '2px'
+                          }
+            ),
+            dbc.Col(
+                dcc.Dropdown(
+                    className="dropdown-item-text",
+                    id='dropdown-menu',
+                    options=[
+                        {'label': '5min', 'value': '5m'},
+                        {'label': '15min', 'value': '15m'},
+                        {'label': '30min', 'value': '30m'},
+                        {'label': '1hr', 'value': '1h'},
+                        {'label': '1d', 'value': '1d'},
+                        # Add more options as needed
+                    ],
+                    value=current_interval, # Set default value,
+                    style={
+                        'background-color': hover_color,
+                        'border-radius': '20px',  # Apply border-radius to give rounded corners
+                        'border': '2px solid #0d1116',
+                    },
+                    clearable=False
+                ),
+                width=2,
+                style={
+                    'width': '10%',  # Change width to 100% to fill the column
+                    'background-color': background_color,
+                }
+            ),
+        ],justify='start',
+        style={'backgroundColor': background_color}),
+        
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(id='stock-graph',
+                          style={'width': '100%', 
+                                 'height': '90vh'
+                                 })
+            ])
+        ], style={'backgroundColor': background_color})
+        ],fluid=True)
+        
+    elif active_tab == "modelling-tab":
+        return dbc.Container(
+    html.H2("Coming Soon"),
+    style={
+        'width': '100%',
+        'height': '100vh',
+        'display': 'flex',
+        'justify-content': 'center',  # Center horizontally
+        'align-items': 'center',  # Center vertically
+    }
+)
+    
+    elif active_tab == "real-time-tab":
+        return dbc.Container(
+    html.H2("Coming Soon"),
+    style={
+        'width': '100%',
+        'height': '100vh',
+        'display': 'flex',
+        'justify-content': 'center',  # Center horizontally
+        'align-items': 'center',  # Center vertically
+    }
+)
+    
 # Callback to update the graph based on input ticker and date range slider
 @app.callback(
     Output('stock-graph', 'figure'),
