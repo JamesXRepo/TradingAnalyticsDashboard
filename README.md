@@ -1,1 +1,2 @@
-# Stock_Analyzer
+# Trading Analytics Dashboard
+
