@@ -1,4 +1,4 @@
-## (Currently in developement)
+## (Currently in development)
 
 # Trading Analytics Dashboard
 - The purpose of this analytics dashboard is to provide ability to identify day trading opportunities by leveraging custom metrics to identify supply and demand imbalances.
