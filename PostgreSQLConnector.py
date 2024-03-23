@@ -23,10 +23,7 @@ class PostgreSQLConnector:
 
     @staticmethod
     def disconnect(connection):
-        if hasattr(connection, 'cursor'):
-            connection.cursor.close()
-        if hasattr(connection, 'connection'):
-            connection.close()
+        connection.close()
         print("Disconnected from database")
 
     @staticmethod

@@ -1,4 +1,4 @@
-CREATE OR REPLACE PROCEDURE stg_tradinganalytics_sch.schema_migration_stg_to_dw() AS
+CREATE OR REPLACE PROCEDURE stg_tradinganalytics_sch.migration_stg_dw_market_data() AS
 $$
 BEGIN
     INSERT INTO dw_tradinganalytics_sch.index_data_15m_dw (datetime, open, high, low, close, volume, ticker)

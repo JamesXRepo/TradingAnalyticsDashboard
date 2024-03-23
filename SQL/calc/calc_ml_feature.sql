@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dw_tradinganalytics_sch.ExecuteDynamicQuery(
+CREATE OR REPLACE FUNCTION dw_tradinganalytics_sch.CalcFeatures(
     ticker_param VARCHAR,
     table_name_param VARCHAR
 ) 

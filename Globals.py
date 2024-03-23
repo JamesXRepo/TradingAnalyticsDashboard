@@ -12,3 +12,5 @@ PASSWORD = 'password'
 HOST = 'localhost'
 PORT = '5433'
 DATABASE = 'tradinganalytics_db'
+
+POLYGON_API = '2cxEUVsD5ioHFF7dTEyFUun0j4FtQRIL'

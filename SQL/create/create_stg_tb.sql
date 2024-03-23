@@ -59,3 +59,17 @@ CREATE TABLE IF NOT EXISTS stg_tradinganalytics_sch.etf_data_1d_stg (
     volume VARCHAR,
     ticker VARCHAR
 );
+
+CREATE TABLE IF NOT EXISTS stg_tradinganalytics_sch.ml_data_1m_stg (
+    v VARCHAR,
+    vw VARCHAR,
+    o VARCHAR,
+    c VARCHAR,
+    h VARCHAR,
+    l VARCHAR,
+    t VARCHAR,
+    n VARCHAR,
+    ticker VARCHAR
+);
+
+

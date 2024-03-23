@@ -63,3 +63,14 @@ CREATE TABLE IF NOT EXISTS dw_tradinganalytics_sch.market_watchlist (
     name VARCHAR,
     type VARCHAR 
 )
+
+CREATE TABLE IF NOT EXISTS dw_tradinganalytics_sch.ml_data_1m_dw (
+    datetime TIMESTAMP,
+	open NUMERIC,
+    high NUMERIC,
+    low NUMERIC,
+    close NUMERIC,
+    volume INTEGER,
+    ticker VARCHAR,
+    transaction_cnt INTEGER
+);

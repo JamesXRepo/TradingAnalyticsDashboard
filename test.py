@@ -2,6 +2,9 @@ import psycopg2
 from psycopg2 import sql
 import pandas as pd
 import yfinance as yf
+import Load
+import local_script_functions.insert as insert
+import PostgreSQLConnector as pg
 
 def run_script():
     # Database connection parameters
@@ -124,13 +127,28 @@ def get_sector_industry(ticker_symbol):
 
     return sector, industry
 
-indx_tickers = ['SPY','QQQ','IWM']
-etf_tickers = ['XLF','XLE','XLV','XLB','XLC','XLP','XLY','XLC']
+def load_polygon_data():
+    ticker = 'AMD'
+    from_date = '2023-01-09'
+    to_date = '2024-03-20'
+    timespan = 'minute'
+    multiper = '1'
+    limit = '25000'
+    api_key = '2cxEUVsD5ioHFF7dTEyFUun0j4FtQRIL'
+    destination = 'stg_tradinganalytics_sch.ml_data_1m_stg'
 
-ticker_symbol = 'XLF'
-ticker = yf.Ticker(ticker_symbol)
+    user = 'postgres'
+    password = 'password'
+    host = 'localhost'
+    port = '5433'
+    database = 'tradinganalytics_db'
 
-# Get summary information
-info = ticker.info
+    conn = pg.PostgreSQLConnector.connect(database,user,password,host,port)
 
-print(info['shortName'])
+    result = Load.Load.polyon_LoadData(ticker,from_date,to_date,timespan,multiper,limit,api_key)
+
+    insert.insert_data_stg(result,destination,conn)
+
+    pg.PostgreSQLConnector.disconnect(conn)
+
+load_polygon_data()

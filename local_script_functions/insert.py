@@ -1,3 +1,6 @@
+import sys
+sys.path.append('../Stock_Analyzer')
+import Globals as gb
 import psycopg2
 import yfinance as yf
 from psycopg2 import sql
@@ -26,7 +29,7 @@ PERIOD_INTERVAL = {
     '1h' : '1y'
 }
 
-def insert_data_stg(stock_data,interval,conn,type):
+def insert_market_stg(stock_data,interval,conn,type):
     # Create a cursor
     cur = conn.cursor()
 
@@ -53,7 +56,7 @@ def insert_data_stg(stock_data,interval,conn,type):
     # Close the cursor and connection
     cur.close()
 
-def yfinance_load_stg():
+def insert_yfinance_stg():
 
     conn = psycopg2.connect(
         host = host,
@@ -88,4 +91,29 @@ def yfinance_load_stg():
                     
     conn.close()
 
-yfinance_load_stg()
+def insert_data_stg(df_data,destination,conn):
+    # Create a cursor
+    cur = conn.cursor()
+
+    # Sample DataFrame with datetime index
+    # Assuming df is your DataFrame with datetime index
+    df_data.reset_index(inplace=True)
+
+    # Insert data into the table
+    try:
+        for index, row in df_data.iterrows():
+            insert_query = sql.SQL("""
+                INSERT INTO """+destination+"""(v,vw,o,c,h,l,t,n,ticker)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """)
+            values = (row['v'], row['vw'], row['o'], row['c'], row['h'], row['l'], row['t'],row['n'],row['ticker'])
+            cur.execute(insert_query, values)
+    except psycopg2.Error as e:
+        print("Error inserting row:", index, "-", e)
+        conn.rollback()  # Rollback the transaction in case of error
+
+    # Commit the transaction
+    conn.commit()
+
+    # Close the cursor and connection
+    cur.close()
