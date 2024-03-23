@@ -23,6 +23,8 @@ conn = psycopg2.connect(
     password = password
 )
 
+
+
 def query(query,connection):
     cursor = connection.cursor()
     try:

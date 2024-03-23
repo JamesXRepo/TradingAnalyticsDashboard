@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../Stock_Analyzer')
 import psycopg2
 from psycopg2 import sql
 import pandas as pd
@@ -6,28 +8,13 @@ import Load
 import local_script_functions.insert as insert
 import PostgreSQLConnector as pg
 
-def run_script():
-    # Database connection parameters
-    user = 'postgres'
-    password = 'password'
-    host = 'localhost'
-    port = '5433'
-    database = 'tradinganalytics_db'
-
+def run_script(sql_file,connection):
     # Read SQL script file
-    sql_file = 'SQL/update_tb.sql'
     with open(sql_file, 'r') as f:
         sql_commands = f.read()
 
     # Split SQL commands into individual commands
     commands = sql_commands.split(';')
-
-    # Establish a connection to the PostgreSQL server without specifying a database
-    try:
-        connection = psycopg2.connect(user=user, password=password, host=host, port=port,database=database)
-        print("Connected to PostgreSQL server.")
-    except psycopg2.Error as e:
-        print("Unable to connect to the PostgreSQL server:", e)
 
     # Set autocommit mode to True to ensure each command is executed independently
     connection.autocommit = True
@@ -50,10 +37,9 @@ def run_script():
 
     # Close cursor and connection
     cursor.close()
-    connection.close()
 
 def yfinance_load():
-    ticker = 'AAPL'
+    ticker = 'AMD'
     period_val = '1mo'
     interval_val = '5m'
     raw_data = yf.Ticker(ticker)
@@ -132,10 +118,10 @@ def load_polygon_data():
     from_date = '2023-01-09'
     to_date = '2024-03-20'
     timespan = 'minute'
-    multiper = '1'
+    multiper = '5'
     limit = '25000'
     api_key = '2cxEUVsD5ioHFF7dTEyFUun0j4FtQRIL'
-    destination = 'stg_tradinganalytics_sch.ml_data_1m_stg'
+    destination = 'stg_tradinganalytics_sch.ml_data_5m_stg'
 
     user = 'postgres'
     password = 'password'
@@ -143,12 +129,20 @@ def load_polygon_data():
     port = '5433'
     database = 'tradinganalytics_db'
 
+    load_sql_file = 'SQL/sql_scripts/ml_data_load_scripts.sql'
+
+    delete_sql_file = 'SQL/sql_scripts/delete_scripts.sql'
+
     conn = pg.PostgreSQLConnector.connect(database,user,password,host,port)
+
+   # run_script(delete_sql_file,conn)
 
     result = Load.Load.polyon_LoadData(ticker,from_date,to_date,timespan,multiper,limit,api_key)
 
     insert.insert_data_stg(result,destination,conn)
 
+   # run_script(load_sql_file,conn)
+
     pg.PostgreSQLConnector.disconnect(conn)
 
-load_polygon_data()
+yfinance_load()

@@ -4,6 +4,7 @@ import Globals as gb
 import psycopg2
 import yfinance as yf
 from psycopg2 import sql
+import PostgreSQLConnector as pg
 
 USER = 'postgres'
 PASSWORD = 'password'
@@ -29,7 +30,24 @@ PERIOD_INTERVAL = {
     '1h' : '1y'
 }
 
-def insert_market_stg(stock_data,interval,conn,type):
+def run():
+    conn = pg.PostgreSQLConnector.connect(database,username,password,host,port)
+    stock_data = yfinance_load()
+    destination = 'stg_tradinganalytics_sch.ml_data_5m_stg'
+    insert_market_stg(stock_data,conn,destination)
+    pg.PostgreSQLConnector.disconnect(conn)
+
+def yfinance_load():
+    ticker = 'AMD'
+    period_val = '1mo'
+    interval_val = '5m'
+    raw_data = yf.Ticker(ticker)
+    stock_data = raw_data.history(period=period_val, interval=interval_val)
+    stock_data = stock_data[['Open', 'High', 'Low', 'Close', 'Volume']]
+    stock_data['Ticker'] = ticker
+    return stock_data
+
+def insert_market_stg(stock_data,conn,destination):
     # Create a cursor
     cur = conn.cursor()
 
@@ -41,7 +59,7 @@ def insert_market_stg(stock_data,interval,conn,type):
     try:
         for index, row in stock_data.iterrows():
             insert_query = sql.SQL("""
-                INSERT INTO stg_tradinganalytics_sch."""+type+"""_data_""" + str(interval) + """_stg (datetime, open, high, low, close, volume, ticker)
+                INSERT INTO """+destination+"""(datetime, open, high, low, close, volume, ticker)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """)
             values = (row['Datetime'], row['Open'], row['High'], row['Low'], row['Close'], row['Volume'], row['Ticker'])
@@ -91,7 +109,7 @@ def insert_yfinance_stg():
                     
     conn.close()
 
-def insert_data_stg(df_data,destination,conn):
+def insert_polygon_stg(df_data,destination,conn):
     # Create a cursor
     cur = conn.cursor()
 
@@ -117,3 +135,5 @@ def insert_data_stg(df_data,destination,conn):
 
     # Close the cursor and connection
     cur.close()
+
+run()

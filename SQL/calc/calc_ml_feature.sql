@@ -1,3 +1,5 @@
+DROP FUNCTION IF EXISTS dw_tradinganalytics_sch.CalcFeatures(character varying, character varying);
+
 CREATE OR REPLACE FUNCTION dw_tradinganalytics_sch.CalcFeatures(
     ticker_param VARCHAR,
     table_name_param VARCHAR
@@ -29,27 +31,27 @@ BEGIN
             FROM
                 dw_tradinganalytics_sch.%I
         ),
-        etf_data_with_direction_volume AS (
+        stock_data_with_direction_volume AS (
             SELECT
-                etf_data.close::NUMERIC,
-                etf_data.high::NUMERIC,
-                etf_data.low::NUMERIC,
-                etf_data.datetime::TIMESTAMP,
-                etf_data.ticker::VARCHAR,
+                stock_data.close::NUMERIC,
+                stock_data.high::NUMERIC,
+                stock_data.low::NUMERIC,
+                stock_data.datetime::TIMESTAMP,
+                stock_data.ticker::VARCHAR,
                 (close - open)::NUMERIC AS open_close_diff,
                 (high - low)::NUMERIC AS high_low_diff,
-                etf_data.volume::NUMERIC,
+                stock_data.volume::NUMERIC,
                 direction_volume_calc.direction_volume::NUMERIC,
-                SUM(direction_volume) OVER (ORDER BY etf_data.datetime ASC)::NUMERIC AS cumulative_volume
+                SUM(direction_volume) OVER (ORDER BY stock_data.datetime ASC)::NUMERIC AS cumulative_volume
             FROM
-                dw_tradinganalytics_sch.%I as etf_data
+                dw_tradinganalytics_sch.%I as stock_data
             JOIN direction_volume_calc 
-                ON direction_volume_calc.datetime = etf_data.datetime
-                AND direction_volume_calc.ticker = etf_data.ticker
+                ON direction_volume_calc.datetime = stock_data.datetime
+                AND direction_volume_calc.ticker = stock_data.ticker
             WHERE
-                etf_data.ticker = %L
+                stock_data.ticker = %L
         )
-        SELECT * FROM etf_data_with_direction_volume',
+        SELECT * FROM stock_data_with_direction_volume',
         table_name_param, table_name_param, ticker_param);
 
 END;

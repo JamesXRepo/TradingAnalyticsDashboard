@@ -25,7 +25,7 @@ class Load:
         timespan + '/' +
         from_date + '/' +
         to_date + '/' +
-        '?adjusted=true&sort=asc&limit=' +
+        '?adjusted=true&sort=desc&limit=' +
         limit + '&apiKey=' +
         api_key)
         
