@@ -1,7 +1,7 @@
 CREATE OR REPLACE PROCEDURE stg_tradinganalytics_sch.migration_stg_dw_ml_data() AS
 $$
 BEGIN
-    INSERT INTO dw_tradinganalytics_sch.ml_data_5m_dw (datetime, open, high, low, close, volume, ticker)
+    INSERT INTO dw_tradinganalytics_sch.ml_data_dw (datetime, open, high, low, close, volume, ticker)
     SELECT datetime::TIMESTAMP,
            open::NUMERIC,
            high::NUMERIC,
@@ -9,7 +9,7 @@ BEGIN
            close::NUMERIC,
            volume::INTEGER,
            ticker::VARCHAR
-    FROM stg_tradinganalytics_sch.ml_data_5m_dw;
+    FROM stg_tradinganalytics_sch.ml_data_stg;
 END;
 $$
 LANGUAGE plpgsql;

@@ -31,16 +31,16 @@ PERIOD_INTERVAL = {
 }
 
 def run():
+    stock_data = yfinance_load('AMD','60d','5m')
     conn = pg.PostgreSQLConnector.connect(database,username,password,host,port)
-    stock_data = yfinance_load()
-    destination = 'stg_tradinganalytics_sch.ml_data_5m_stg'
+    destination = 'stg_tradinganalytics_sch.ml_data_stg'
     insert_market_stg(stock_data,conn,destination)
     pg.PostgreSQLConnector.disconnect(conn)
 
-def yfinance_load():
-    ticker = 'AMD'
-    period_val = '1mo'
-    interval_val = '5m'
+def yfinance_load(ticker,period,interval):
+    ticker = ticker
+    period_val = period
+    interval_val = interval
     raw_data = yf.Ticker(ticker)
     stock_data = raw_data.history(period=period_val, interval=interval_val)
     stock_data = stock_data[['Open', 'High', 'Low', 'Close', 'Volume']]
@@ -135,5 +135,6 @@ def insert_polygon_stg(df_data,destination,conn):
 
     # Close the cursor and connection
     cur.close()
+
 
 run()

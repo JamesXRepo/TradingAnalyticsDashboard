@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS stg_tradinganalytics_sch.ml_data_1m_stg (
     ticker VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS stg_tradinganalytics_sch.ml_data_5m_stg (
+CREATE TABLE IF NOT EXISTS stg_tradinganalytics_sch.ml_data_stg (
     datetime TIMESTAMP,
     open VARCHAR,
     high VARCHAR,
